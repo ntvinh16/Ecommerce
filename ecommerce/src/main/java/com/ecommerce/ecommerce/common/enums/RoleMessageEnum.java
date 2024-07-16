@@ -7,14 +7,13 @@ import org.springframework.http.HttpStatus;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
-public enum PermissionMessageEnum {
-    CREATE_SUCCESS(20001, "Create permission success", HttpStatus.OK),
-    FIND_ALL_SUCCESS(20002, "Get all permission", HttpStatus.OK),
-    DELETE_SUCCESS(20003, "Delete permission success", HttpStatus.OK),
-
-    ;
-
-    PermissionMessageEnum(int code, String message, HttpStatus statusCode){
+public enum RoleMessageEnum {
+    CREATE_SUCCESS(20101, "Create role success", HttpStatus.OK),
+    UPDATE_SUCCESS(20102, "Update role success", HttpStatus.OK),
+    DELETE_SUCCESS(20103, "Delete role success", HttpStatus.OK),
+    FIND_ALL_SUCCESS(20104, "Find all roles success", HttpStatus.OK),
+;
+    RoleMessageEnum(int code, String message, HttpStatus statusCode){
         this.code = code;
         this.message = message;
         this.statusCode = statusCode;

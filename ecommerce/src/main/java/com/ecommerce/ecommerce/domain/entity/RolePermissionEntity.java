@@ -7,7 +7,7 @@ import lombok.experimental.FieldDefaults;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ROLES_PERMISSION_TBL")
+@Table(name = "ROLE_PERMISSIONS_TBL")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,13 +15,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RolePermissionEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "ID")
-    UUID id;
-
     @Column(name = "ROLE_ID", nullable = false)
-    String roleId;
+    UUID roleId;
 
     @Column(name = "PERMISSION_ID", nullable = false)
-    String permissionId;
+    UUID permissionId;
 }

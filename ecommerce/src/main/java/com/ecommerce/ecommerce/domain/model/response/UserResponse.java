@@ -3,15 +3,20 @@ package com.ecommerce.ecommerce.domain.model.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.sql.Date;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionResponse {
+public class UserResponse {
     UUID id;
-    String name;
-    String description;
+    String username;
+    String email;
+    Date birthday;
+    String fullName;
+    Set<RoleResponse> roles;
 }

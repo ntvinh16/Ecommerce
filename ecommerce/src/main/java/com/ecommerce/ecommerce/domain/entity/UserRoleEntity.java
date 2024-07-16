@@ -15,13 +15,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRoleEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "ID")
-    UUID id;
-
     @Column(name = "USER_ID", nullable = false)
-    String userId;
+    UUID userId;
 
     @Column(name = "ROLE_ID", nullable = false)
-    String roleId;
+    UUID roleId;
 }

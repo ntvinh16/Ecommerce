@@ -26,17 +26,31 @@ public class PermisionController {
         boolean result = permissionService.save(request);
 
         return ApiResponse.<Boolean>builder()
-                .message(PermissionMessageEnum.CREATE_SUCCESS.name())
+                .code(PermissionMessageEnum.CREATE_SUCCESS.getCode())
+                .message(PermissionMessageEnum.CREATE_SUCCESS.getMessage())
                 .result(result)
                 .build();
     }
 
     @GetMapping
-    ApiResponse<PagedList<PermissionResponse>> findAll(Integer pageNumber, Integer pageSize) {
-        var result = permissionService.findAll(pageNumber, pageSize);
+    ApiResponse<PagedList<PermissionResponse>> findAll(@RequestParam(defaultValue = "1") Integer page,
+                                                       @RequestParam(defaultValue = "10") Integer size) {
+        var result = permissionService.findAll(page, size);
         return ApiResponse.<PagedList<PermissionResponse>>builder()
-                .message(PermissionMessageEnum.FIND_ALL_SUCCESS.name())
+                .code(PermissionMessageEnum.FIND_ALL_SUCCESS.getCode())
+                .message(PermissionMessageEnum.FIND_ALL_SUCCESS.getMessage())
                 .result(result)
                 .build();
     }
+
+    @DeleteMapping
+    ApiResponse<Boolean> delete(@RequestParam String id) {
+        var result = permissionService.delete(id);
+        return ApiResponse.<Boolean>builder()
+                .code(PermissionMessageEnum.DELETE_SUCCESS.getCode())
+                .message(PermissionMessageEnum.DELETE_SUCCESS.getMessage())
+                .result(result)
+                .build();
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.ecommerce.ecommerce.config.sercurity;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,24 +18,28 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SercurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {
-            "/user", "/auth/token", "auth/introspect", "auth/logout", "auth/refresh", "/permissions"
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/users", "/auth/**"
     };
+
+    private CustomJwtDecoder customJwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                         .anyRequest().authenticated());
 
-//        httpSecurity.oauth2ResourceServer(oathu2 ->
-//                oathu2.jwt(jwtConfigurer ->
-//                                jwtConfigurer.decoder(customJwtDecoder)
-//                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-//                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-//        );
+        httpSecurity.oauth2ResourceServer(oathu2 ->
+                oathu2.jwt(jwtConfigurer ->
+                                jwtConfigurer.decoder(customJwtDecoder)
+                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+        );
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 

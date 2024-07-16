@@ -25,7 +25,4 @@ public class PermissionEntity {
 
     @Column(name = "DESCRIPTION")
     String description;
-
-//    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
-//    Set<RoleEntity> roles;
 }

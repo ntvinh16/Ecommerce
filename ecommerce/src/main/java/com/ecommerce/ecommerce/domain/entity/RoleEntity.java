@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,11 +27,11 @@ public class RoleEntity {
     @Column(name = "DESCRIPTION")
     String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "ROLES_PERMISSION_TBL",
+            name = "ROLE_PERMISSIONS_TBL",
             joinColumns = @JoinColumn(name = "ROLE_ID"),
             inverseJoinColumns = @JoinColumn(name = "PERMISSION_ID")
     )
-    Set<PermissionEntity> permissions;
+    Set<PermissionEntity> permissions = new HashSet<>();
 }

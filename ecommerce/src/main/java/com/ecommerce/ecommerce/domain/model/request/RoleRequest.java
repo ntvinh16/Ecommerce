@@ -1,17 +1,19 @@
-package com.ecommerce.ecommerce.domain.model.response;
+package com.ecommerce.ecommerce.domain.model.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionResponse {
+public class RoleRequest {
     UUID id;
     String name;
     String description;
+    Set<UUID> permissions;
 }

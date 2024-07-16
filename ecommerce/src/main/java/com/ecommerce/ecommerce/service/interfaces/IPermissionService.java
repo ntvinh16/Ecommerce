@@ -6,6 +6,6 @@ import com.ecommerce.ecommerce.domain.model.response.PermissionResponse;
 
 public interface IPermissionService {
     boolean save(PermissionRequest request);
-    PagedList<PermissionResponse> findAll(Integer pageNumber, Integer pageSize);
+    PagedList<PermissionResponse> findAll(Integer page, Integer size);
     boolean delete(String id);
 }

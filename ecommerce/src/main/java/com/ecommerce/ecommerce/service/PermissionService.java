@@ -8,19 +8,22 @@ import com.ecommerce.ecommerce.domain.model.response.PermissionResponse;
 import com.ecommerce.ecommerce.exception.AppException;
 import com.ecommerce.ecommerce.exception.ErrorCode;
 import com.ecommerce.ecommerce.repository.PermissionRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static com.ecommerce.ecommerce.helper.Convert.convertStringToUUID;
+
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PermissionService implements IPermissionService {
-    @Autowired
-    private PermissionRepository permissionRepository;
+    PermissionRepository permissionRepository;
+    ModelMapper mapper;
 
-    @Autowired
-    private ModelMapper mapper;
-
-    @Override
     public boolean save(PermissionRequest request) {
             var checkPermission = permissionRepository.findByName(request.getName());
             if(checkPermission != null){
@@ -33,14 +36,20 @@ public class PermissionService implements IPermissionService {
             return true;
     }
 
-    @Override
-    public PagedList<PermissionResponse> findAll(Integer pageNumber, Integer pageSize) {
+    public PagedList<PermissionResponse> findAll(Integer page, Integer size) {
         var result = permissionRepository.findAll().stream().map(per -> mapper.map(per, PermissionResponse.class)).toList();
-        return new PagedList<>(pageNumber, pageSize, result);
+        return new PagedList<>(page, size, result);
     }
 
-    @Override
     public boolean delete(String id) {
-        return false;
+        var checkPermission = permissionRepository.findById(convertStringToUUID(id));
+        if(checkPermission.isEmpty()){
+            throw new AppException(ErrorCode.PERMISSION_NOT_EXISTED);
+        }
+
+        permissionRepository.delete(checkPermission.get());
+        return true;
+
     }
+
 }
