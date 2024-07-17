@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -53,20 +54,28 @@ public class UserService implements IUserService {
         return true;
     }
 
+    @PreAuthorize("hasAnyAuthority(T(com.ecommerce.ecommerce.common.enums.roles.PermissionEnum).UPDATE_POST.name())")
     public boolean update(String id, UserRequest request) {
-        var user = userRepositoy.findById(convertStringToUUID(id));
-        if (user.isEmpty()) {
+        var user = userRepositoy.findById(convertStringToUUID(id)).isPresent()
+                ? userRepositoy.findById(convertStringToUUID(id)).get()
+                : null;
+
+        if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
 
-        var checkUsername = userRepositoy.findByUsername(request.getUsername());
-        if (checkUsername != null) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+        if (!user.getUsername().equals(request.getUsername())) {
+            var checkUsername = userRepositoy.findByUsername(request.getUsername());
+            if (checkUsername != null) {
+                throw new AppException(ErrorCode.USER_EXISTED);
+            }
         }
 
-        var checkMail = userRepositoy.findByEmail(request.getEmail());
-        if (checkMail != null) {
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        if (!user.getEmail().equals(request.getEmail())) {
+            var checkMail = userRepositoy.findByEmail(request.getEmail());
+            if (checkMail != null) {
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            }
         }
 
         var userUpdate = mapper.map(request, UserEntity.class);
@@ -81,6 +90,7 @@ public class UserService implements IUserService {
         return true;
     }
 
+    @PreAuthorize("hasRole(T(com.ecommerce.ecommerce.common.enums.roles.RoleEnum).ROLE_ADMIN.name())")
     public boolean delete(String id) {
         var user = userRepositoy.findById(convertStringToUUID(id));
         if (user.isEmpty()) {
@@ -90,6 +100,7 @@ public class UserService implements IUserService {
         return true;
     }
 
+    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse findUserById(String id) {
         var user = userRepositoy.findById(convertStringToUUID(id));
         if (user.isEmpty()) {
@@ -99,9 +110,9 @@ public class UserService implements IUserService {
         return mapper.map(user, UserResponse.class);
     }
 
-    @PreAuthorize("hasAuthority('APPROVE_POST')")
+    @PreAuthorize("hasRole(T(com.ecommerce.ecommerce.common.enums.roles.RoleEnum).ROLE_ADMIN.name())")
     public PagedList<UserResponse> findAll(int page, int size) {
-        var result = userRepositoy.findAll().stream().map(user ->mapper.map(user, UserResponse.class)).toList();
+        var result = userRepositoy.findAll().stream().map(user -> mapper.map(user, UserResponse.class)).toList();
         return new PagedList<>(page, size, result);
     }
 }

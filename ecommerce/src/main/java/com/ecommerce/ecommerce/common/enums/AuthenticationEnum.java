@@ -13,6 +13,9 @@ public enum AuthenticationEnum {
     DELETE_SUCCESS(20303, "Delete user success", HttpStatus.OK),
     FIND_ALL_SUCCESS(20304, "Find all users success", HttpStatus.OK),
     FIND_USER_SUCCESS(20305, "Find users success", HttpStatus.OK),
+    LOGOUT_SUCCESS(20306, "Logout success",HttpStatus.OK),
+    REFRESH_SUCCESS(20307, "Refresh token success",HttpStatus.OK),
+
             ;
     AuthenticationEnum(int code, String message, HttpStatus statusCode){
         this.code = code;

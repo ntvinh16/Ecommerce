@@ -6,12 +6,13 @@ import com.ecommerce.ecommerce.domain.model.request.LogoutRequest;
 import com.ecommerce.ecommerce.domain.model.request.RefreshRequest;
 import com.ecommerce.ecommerce.domain.model.response.AuthenticationResponse;
 import com.ecommerce.ecommerce.domain.model.response.IntrospectResponse;
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jose.JOSEException;
+
+import java.text.ParseException;
 
 public interface IAuthenticationService {
     IntrospectResponse introspect(IntrospectRequest request);
     AuthenticationResponse authenticate(AuthenticationRequest request);
-    void logout(LogoutRequest request);
-    AuthenticationResponse refreshToken(RefreshRequest request);
-    SignedJWT verifyToken(String token, boolean isRefresh);
+    void logout(LogoutRequest request) throws ParseException, JOSEException;
+    AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException;
 }

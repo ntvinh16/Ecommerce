@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce.domain.model.request;
 
 
+import com.ecommerce.ecommerce.validator.BirthdayConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -30,6 +31,7 @@ public class UserRequest {
     @NotEmpty(message = "PASSWORD_NOT_EMPTY")
     String password;
 
+    @BirthdayConstraint(min = 18, message = "INVALID_DOB")
     Date birthday;
 
     String fullName;

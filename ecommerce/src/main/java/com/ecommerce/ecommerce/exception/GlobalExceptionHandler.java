@@ -45,13 +45,13 @@ public class GlobalExceptionHandler {
         try {
             errorCode = ErrorCode.valueOf(enumKey);
 
-            var contrainViolation = exception.getBindingResult()
+            var containViolation = exception.getBindingResult()
                     .getAllErrors()
                     .getFirst()
                     .unwrap(ConstraintViolation.class);
 
-            attributes = contrainViolation.getConstraintDescriptor().getAttributes();
-        } catch (IllegalArgumentException e) {
+            attributes = containViolation.getConstraintDescriptor().getAttributes();
+        } catch (IllegalArgumentException ignored) {
 
         }
 

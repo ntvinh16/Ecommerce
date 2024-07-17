@@ -1,6 +1,5 @@
 package com.ecommerce.ecommerce.controller;
 
-import com.ecommerce.ecommerce.common.enums.PermissionMessageEnum;
 import com.ecommerce.ecommerce.common.enums.RoleMessageEnum;
 import com.ecommerce.ecommerce.domain.model.request.RoleRequest;
 import com.ecommerce.ecommerce.domain.model.response.ApiResponse;

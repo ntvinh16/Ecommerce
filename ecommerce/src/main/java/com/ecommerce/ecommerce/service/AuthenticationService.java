@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce.service;
 
+import com.ecommerce.ecommerce.domain.entity.InvalidatedToken;
 import com.ecommerce.ecommerce.domain.entity.UserEntity;
 import com.ecommerce.ecommerce.domain.model.request.AuthenticationRequest;
 import com.ecommerce.ecommerce.domain.model.request.IntrospectRequest;
@@ -9,6 +10,7 @@ import com.ecommerce.ecommerce.domain.model.response.AuthenticationResponse;
 import com.ecommerce.ecommerce.domain.model.response.IntrospectResponse;
 import com.ecommerce.ecommerce.exception.AppException;
 import com.ecommerce.ecommerce.exception.ErrorCode;
+import com.ecommerce.ecommerce.repository.InvalidatedTokenRepository;
 import com.ecommerce.ecommerce.repository.UserRepositoy;
 import com.ecommerce.ecommerce.service.interfaces.IAuthenticationService;
 import com.nimbusds.jose.*;
@@ -30,6 +32,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
+
+import static com.ecommerce.ecommerce.helper.Convert.convertStringToUUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,34 +44,33 @@ public class AuthenticationService implements IAuthenticationService {
     UserRepositoy userRepositoy;
 
     PasswordEncoder passwordEncoder;
+    private InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
-    private String SIGNER_KEY;
+    String SIGNER_KEY;
+
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    long REFRESHABLE_DURATION;
 
     public IntrospectResponse introspect(IntrospectRequest request) {
         var token = request.getToken();
+        boolean isValid = true;
 
         try {
-            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-            try {
-
-                SignedJWT signedJWT = SignedJWT.parse(token);
-
-                Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-               var verified = signedJWT.verify(verifier);
-
-                return IntrospectResponse.builder()
-                        .valid(verified && expirationTime.after(new Date()))
-                        .build();
-
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (JOSEException e) {
-            throw new RuntimeException(e);
+            verifyToken(token, false);
+        } catch (AppException | JOSEException | ParseException e) {
+            isValid = false;
         }
+
+        return IntrospectResponse.builder()
+                .valid(isValid)
+                .build();
     }
 
 
@@ -90,18 +94,72 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
 
-    public void logout(LogoutRequest request) {
+    public void logout(LogoutRequest request)
+            throws ParseException, JOSEException {
+        SignedJWT signToken = verifyToken(request.getToken(), true);
 
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(UUID.fromString(jit))
+                .expiryTime(expirationTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
     }
 
 
-    public AuthenticationResponse refreshToken(RefreshRequest request) {
-        return null;
+    public AuthenticationResponse refreshToken(RefreshRequest request)
+            throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken(), true);
+
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(UUID.fromString(jit))
+                .expiryTime(expirationTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signToken.getJWTClaimsSet().getSubject();
+
+        var user = userRepositoy.findByUsername(username);
+        if (user == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+        }
+
+        var token = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
     }
 
 
-    public SignedJWT verifyToken(String token, boolean isRefresh) {
-        return null;
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expirationTime = (isRefresh) ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.MINUTES).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified = signedJWT.verify(verifier);
+
+        if (!(verified && expirationTime.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+
+        if (invalidatedTokenRepository.existsById(convertStringToUUID(signedJWT.getJWTClaimsSet().getJWTID())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+
+        return signedJWT;
     }
 
     String generateToken(UserEntity user) {
@@ -112,8 +170,9 @@ public class AuthenticationService implements IAuthenticationService {
                 .issuer("ecommerce.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
                 ))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
                 .build();
 
